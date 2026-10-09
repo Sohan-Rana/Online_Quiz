@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Quiz System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Hind+Siliguri:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root {
+  --bg: #F2F5F3;
+  --surface: #FFFFFF;
+  --ink: #13201B;
+  --muted: #55645D;
+  --line: #D5DDD8;
+  --accent: #0A7A5A;
+  --accent-ink: #FFFFFF;
+  --good: #14804A;
+  --good-bg: #E1F3E8;
+  --bad: #B3261E;
+  --bad-bg: #FBE5E3;
+  --focus: #1B5FD1;
+  --font-display: "Bricolage Grotesque", "Hind Siliguri", system-ui, sans-serif;
+  --font-body: "Hind Siliguri", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1714; --surface: #17221E; --ink: #E6EFEA; --muted: #9AABA3; --line: #2A3A34;
+    --accent: #3FCF9F; --accent-ink: #06241A; --good: #5BD68E; --good-bg: #12301F;
+    --bad: #FF8A80; --bad-bg: #3A1815; --focus: #7DA8FF; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 24px 48px;
+}
+.wrap { max-width: 720px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-size: 1.75rem; line-height: 1.15; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.tag { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+h2 { font-family: var(--font-display); font-size: 1.2rem; margin: 0; text-wrap: balance; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 8px; }
+label, .label { font-weight: 600; font-size: 0.95rem; }
+.hint { color: var(--muted); font-size: 0.875rem; }
+input[type="text"], select {
+  font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; width: 100%; min-width: 0;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+.chip span { display: inline-block; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font-weight: 500; }
+.chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip input:focus-visible + span, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+button { font: inherit; cursor: pointer; }
+.btn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 12px 18px; font-weight: 600; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.progress { display: flex; align-items: center; gap: 12px; }
+.bar { flex: 1; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .25s ease; }
+.count { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.qcat { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+.qtext { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.3; margin: 0; text-wrap: balance; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.opt { display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt b { font-family: var(--font-mono); font-weight: 500; color: var(--muted); min-width: 1.2em; }
+.opt.right { background: var(--good-bg); border-color: var(--good); }
+.opt.wrong { background: var(--bad-bg); border-color: var(--bad); }
+.feedback { font-weight: 600; min-height: 1.5em; }
+.feedback.ok { color: var(--good); }
+.feedback.no { color: var(--bad); }
+.score { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.score strong { font-family: var(--font-mono); font-size: 2.6rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.grade { font-family: var(--font-display); font-size: 1.25rem; color: var(--accent); }
+.review { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.review li { border-left: 3px solid var(--line); padding-left: 12px; }
+.review li.miss { border-color: var(--bad); }
+.board { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Online Quiz System</h1>
+    <span class="tag">Sample · ব্রাউজার ভার্সন</span>
+  </header>
+  <main id="app"></main>
+</div>
+
+<script>
+var QUESTIONS = [
+  {c:"Python",t:"Which keyword is used to define a function in Python?",o:["func","def","function","lambda"],a:1},
+  {c:"Python",t:"What is the output of len([1, 2, 3])?",o:["2","3","4","Error"],a:1},
+  {c:"Python",t:"Which data type is immutable in Python?",o:["list","dict","tuple","set"],a:2},
+  {c:"Python",t:"Which symbol starts a single-line comment in Python?",o:["//","#","--","/*"],a:1},
+  {c:"Python",t:"What does the range(3) function produce?",o:["1, 2, 3","0, 1, 2","0, 1, 2, 3","1, 2"],a:1},
+  {c:"Python",t:"Which module is used to work with JSON in Python?",o:["jsonlib","pickle","json","simplejson"],a:2},
+  {c:"Computer Basics",t:"What does CPU stand for?",o:["Central Processing Unit","Computer Personal Unit","Central Program Utility","Core Processing Unit"],a:0},
+  {c:"Computer Basics",t:"Which of these is an operating system?",o:["Python","Linux","HTML","MySQL"],a:1},
+  {c:"Computer Basics",t:"1 byte is equal to how many bits?",o:["4","8","16","32"],a:1},
+  {c:"Computer Basics",t:"What does HTTP stand for?",o:["HyperText Transfer Protocol","High Transfer Text Protocol","HyperText Transmission Process","Host Transfer Protocol"],a:0},
+  {c:"Bangladesh",t:"What is the capital of Bangladesh?",o:["Chattogram","Dhaka","Sylhet","Rajshahi"],a:1},
+  {c:"Bangladesh",t:"In which year did Bangladesh gain independence?",o:["1947","1952","1971","1975"],a:2},
+  {c:"Bangladesh",t:"What is the national flower of Bangladesh?",o:["Rose","Water Lily (Shapla)","Lotus","Jasmine"],a:1},
+  {c:"Bangladesh",t:"Which is the longest sea beach in Bangladesh?",o:["Kuakata","Cox's Bazar","Patenga","Inani"],a:1}
+];
+var LETTERS = "ABCDEFGH";
+var STORE_KEY = "oqs-results-v1";
+var app = document.getElementById("app");
+
+function h(tag, props, kids) {
+  var el = document.createElement(tag);
+  props = props || {};
+  Object.keys(props).forEach(function (k) {
+    if (k === "class") el.className = props[k];
+    else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2), props[k]);
+    else el.setAttribute(k, props[k]);
+  });
+  (kids || []).forEach(function (kid) {
+    if (kid == null) return;
+    el.appendChild(typeof kid === "string" ? document.createTextNode(kid) : kid);
+  });
+  return el;
+}
+function clear() { while (app.firstChild) app.removeChild(app.firstChild); }
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function categories() {
+  var seen = {}, out = [];
+  QUESTIONS.forEach(function (q) { if (!seen[q.c]) { seen[q.c] = 1; out.push(q.c); } });
+  return out;
+}
+function loadResults() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { return []; }
+}
+function saveResult(r) {
+  try {
+    var all = loadResults(); all.push(r);
+    localStorage.setItem(STORE_KEY, JSON.stringify(all.slice(-100)));
+  } catch (e) {}
+}
+function gradeOf(p) {
+  if (p >= 90) return "চমৎকার";
+  if (p >= 70) return "ভালো";
+  if (p >= 50) return "মোটামুটি";
+  return "আরও অনুশীলন দরকার";
+}
+
+var cfg = { name: "", cat: "All", count: 5 };
+
+function startScreen() {
+  clear();
+  var cats = categories();
+  var nameInput = h("input", { type: "text", id: "player-name", maxlength: "24", placeholder: "যেমন: সোহান", autocomplete: "off" });
+  nameInput.value = cfg.name;
+  var countSel = h("select", { id: "q-count" });
+  function fillCounts() {
+    var avail = cfg.cat === "All" ? QUESTIONS.length : QUESTIONS.filter(function (q) { return q.c === cfg.cat; }).length;
+    var opts = [3, 5, 10, avail].filter(function (n, i, a) { return n <= avail && a.indexOf(n) === i; }).sort(function (x, y) { return x - y; });
+    while (countSel.firstChild) countSel.removeChild(countSel.firstChild);
+    opts.forEach(function (n) {
+      var o = h("option", { value: String(n) }, [n === avail ? n + " (সবগুলো)" : String(n)]);
+      countSel.appendChild(o);
+    });
+    var want = Math.min(cfg.count, avail);
+    var pick = opts.indexOf(want) >= 0 ? want : opts[opts.length - 1];
+    countSel.value = String(pick); cfg.count = pick;
+  }
+  var chips = h("div", { class: "chips", role: "radiogroup", "aria-label": "ক্যাটাগরি" });
+  ["All"].concat(cats).forEach(function (c) {
+    var inp = h("input", { type: "radio", name: "cat", value: c });
+    if (c === cfg.cat) inp.checked = true;
+    inp.addEventListener("change", function () { cfg.cat = c; fillCounts(); });
+    chips.appendChild(h("label", { class: "chip" }, [inp, h("span", {}, [c === "All" ? "সব ক্যাটাগরি" : c])]));
+  });
+  countSel.addEventListener("change", function () { cfg.count = parseInt(countSel.value, 10); });
+  fillCounts();
+
+  var go = h("button", { class: "btn", type: "button", onclick: function () {
+    cfg.name = nameInput.value.trim() || "Guest";
+    startQuiz();
+  } }, ["কুইজ শুরু করুন"]);
+
+  app.appendChild(h("section", { class: "panel" }, [
+    h("h2", {}, ["নতুন কুইজ"]),
+    h("div", { class: "field" }, [h("label", { for: "player-name" }, ["আপনার নাম"]), nameInput]),
+    h("div", { class: "field" }, [h("span", { class: "label" }, ["ক্যাটাগরি"]), chips]),
+    h("div", { class: "field" }, [h("label", { for: "q-count" }, ["প্রশ্নের সংখ্যা"]), countSel]),
+    h("div", { class: "actions" }, [go])
+  ]));
+  app.appendChild(leaderboardPanel());
+}
+
+function leaderboardPanel() {
+  var rows = loadResults().filter(function (r) { return r.total > 0; });
+  rows.sort(function (a, b) { return (b.score / b.total) - (a.score / a.total) || b.total - a.total; });
+  rows = rows.slice(0, 8);
+  var body;
+  if (!rows.length) {
+    body = h("p", { class: "empty" }, ["এখনও কোনো ফলাফল নেই। প্রথম কুইজটা খেলুন।"]);
+  } else {
+    var tbody = h("tbody");
+    rows.forEach(function (r, i) {
+      tbody.appendChild(h("tr", {}, [
+        h("td", { class: "num" }, [String(i + 1)]),
+        h("td", {}, [r.player]),
+        h("td", {}, [r.category]),
+        h("td", { class: "num" }, [r.score + "/" + r.total]),
+        h("td", { class: "num" }, [Math.round(100 * r.score / r.total) + "%"])
+      ]));
+    });
+    body = h("div", { class: "board" }, [h("table", {}, [
+      h("thead", {}, [h("tr", {}, [h("th", {}, ["#"]), h("th", {}, ["নাম"]), h("th", {}, ["ক্যাটাগরি"]), h("th", {}, ["স্কোর"]), h("th", {}, ["%"])])]),
+      tbody
+    ])]);
+  }
+  return h("section", { class: "panel" }, [
+    h("h2", {}, ["লিডারবোর্ড"]),
+    body,
+    h("p", { class: "hint" }, ["ফলাফল শুধু এই ব্রাউজারে জমা থাকে।"])
+  ]);
+}
+
+var run = null;
+function startQuiz() {
+  var pool = cfg.cat === "All" ? QUESTIONS : QUESTIONS.filter(function (q) { return q.c === cfg.cat; });
+  run = { qs: shuffle(pool).slice(0, cfg.count), i: 0, score: 0, log: [] };
+  showQuestion();
+}
+
+function showQuestion() {
+  clear();
+  var q = run.qs[run.i];
+  var total = run.qs.length;
+  var fb = h("p", { class: "feedback", role: "status", "aria-live": "polite" });
+  var next = h("button", { class: "btn", type: "button", disabled: "disabled", onclick: function () {
+    run.i++;
+    if (run.i >= total) showResult(); else showQuestion();
+  } }, [run.i + 1 >= total ? "ফলাফল দেখুন" : "পরের প্রশ্ন"]);
+  var buttons = [];
+  var list = h("div", { class: "options" });
+  q.o.forEach(function (text, idx) {
+    var b = h("button", { class: "opt", type: "button", onclick: function () {
+      var ok = idx === q.a;
+      if (ok) run.score++;
+      run.log.push({ q: q, pick: idx, ok: ok });
+      buttons.forEach(function (x, k) {
+        x.disabled = true;
+        if (k === q.a) x.classList.add("right");
+        else if (k === idx) x.classList.add("wrong");
+      });
+      fb.textContent = ok ? "সঠিক উত্তর!" : "ভুল। সঠিক উত্তর: " + LETTERS[q.a] + ". " + q.o[q.a];
+      fb.className = "feedback " + (ok ? "ok" : "no");
+      next.removeAttribute("disabled");
+      next.focus();
+    } }, [h("b", {}, [LETTERS[idx]]), h("span", {}, [text])]);
+    buttons.push(b); list.appendChild(b);
+  });
+  var fill = h("i"); fill.style.width = Math.round(100 * run.i / total) + "%";
+  app.appendChild(h("section", { class: "panel" }, [
+    h("div", { class: "progress" }, [h("div", { class: "bar" }, [fill]), h("span", { class: "count" }, [(run.i + 1) + " / " + total])]),
+    h("span", { class: "qcat" }, [q.c]),
+    h("h2", { class: "qtext" }, [q.t]),
+    list, fb,
+    h("div", { class: "actions" }, [next])
+  ]));
+}
+
+function showResult() {
+  clear();
+  var total = run.qs.length;
+  var pct = Math.round(1000 * run.score / total) / 10;
+  saveResult({ player: cfg.name, category: cfg.cat === "All" ? "All" : cfg.cat, score: run.score, total: total });
+  var misses = run.log.filter(function (l) { return !l.ok; });
+  var review = h("ul", { class: "review" });
+  run.log.forEach(function (l) {
+    review.appendChild(h("li", { class: l.ok ? "" : "miss" }, [
+      h("div", {}, [l.q.t]),
+      h("div", { class: "hint" }, [l.ok ? "সঠিক: " + l.q.o[l.q.a] : "আপনার উত্তর: " + l.q.o[l.pick] + " · সঠিক: " + l.q.o[l.q.a]])
+    ]));
+  });
+  app.appendChild(h("section", { class: "panel" }, [
+    h("h2", {}, [cfg.name + ", আপনার ফলাফল"]),
+    h("div", { class: "score" }, [h("strong", {}, [run.score + "/" + total]), h("span", { class: "count" }, [pct + "%"]), h("span", { class: "grade" }, [gradeOf(pct)])]),
+    h("p", { class: "hint" }, [misses.length ? "ভুল হয়েছে " + misses.length + "টি। নিচে দেখে নিন।" : "সবগুলো উত্তর সঠিক!"]),
+    review,
+    h("div", { class: "actions" }, [
+      h("button", { class: "btn", type: "button", onclick: startQuiz }, ["আবার খেলুন"]),
+      h("button", { class: "btn ghost", type: "button", onclick: startScreen }, ["শুরুর পাতা"])
+    ])
+  ]));
+  app.appendChild(leaderboardPanel());
+}
+
+startScreen();
+</script>
+</body>
+</html>
